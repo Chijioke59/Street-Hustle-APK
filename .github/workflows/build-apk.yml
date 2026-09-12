@@ -1,0 +1,42 @@
+name: Build Street Hustle APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+
+      - name: Extract Street Hustle project
+        run: |
+          mkdir -p project
+          unzip -o ".github/workflows/Street_Hustle_Simple_APK_Build.zip" -d project
+
+      - name: Find Android project
+        run: |
+          echo "Looking for Gradle project..."
+          find project -name gradlew -type f -print
+
+      - name: Build APK
+        run: |
+          GRADLEW=$(find project -name gradlew -type f | head -n 1)
+          if [ -z "$GRADLEW" ]; then
+            echo "ERROR: gradlew was not found."
+            exit 1
+          fi
+          chmod +x "$GRADLEW"
+          cd "$(dirname "$GRADLEW")"
+          ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Street-Hustle-APK
+          path: project/**/build/outputs/apk/**/*.apk
